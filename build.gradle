@@ -1,0 +1,36 @@
+plugins {
+    id 'scala'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+}
+
+group 'it.uniroma1.dss'
+version '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+shadowJar.zip64 = true
+
+sourceSets.main.scala.srcDirs = ["src/main/java"]
+sourceSets.main.java.srcDirs = []
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'fade.Main'
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    implementation 'org.apache.spark:spark-core_2.11:2.3.3'
+    implementation 'org.apache.spark:spark-mllib_2.11:2.3.3'
+    implementation 'com.github.umbfer:fastdoop:1e74186'
+    implementation 'com.github.umbfer:fastdoop:1e74186'
+    implementation 'it.unimi.dsi:fastutil:8.4.0'
+}
