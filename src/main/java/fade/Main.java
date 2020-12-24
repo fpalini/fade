@@ -7,11 +7,17 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
+import org.apache.log4j.Logger;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 public class Main {
+
+    static Logger logger = Logger.getLogger(Main.class);
+
+
     public static void main(String[] args) throws ConfigurationException, ClassNotFoundException, IOException, AggregationStrategyException {
         String conf_file_path = args.length > 0 ? args[0] : "fade.conf";
 
@@ -20,6 +26,8 @@ public class Main {
         Iterator<String> iter = conf_file.getKeys();
 
         fade.util.Configuration conf = new fade.util.Configuration();
+
+	logger.info("Program started." + " Configuration file: " + conf_file_path + " loaded.");
 
         String key, value;
         while(iter.hasNext()) {

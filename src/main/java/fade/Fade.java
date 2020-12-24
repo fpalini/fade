@@ -9,7 +9,7 @@ import fade.util.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.spark.HashPartitioner;
+import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -39,21 +39,31 @@ public class Fade {
     private String outputDir;
     private Strategy strategy = Defaults.STRATEGY;
 
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+    
+
     public Fade(Configuration conf) {
         this.conf = conf;
-        
         String master = conf.getBoolean("local", Defaults.LOCAL) ? "local[*]" : "yarn";
-        SparkConf sparkConf = new SparkConf().setMaster(master).setAppName("FADE");
-        jsc = new JavaSparkContext(sparkConf);
+        java.nio.file.Path path = java.nio.file.Paths.get(conf.getString("input"));
+        String appName = "FADE: " + path.getFileName().toString();
+
+        // Define a configuration to use to interact with Spark
+        SparkConf sparkConf = new SparkConf()
+                .setMaster( master)
+                .setAppName( appName);
+
+        jsc = new JavaSparkContext( sparkConf);
+        // conf.set("mapred.max.split.size","5000000");
+
+        logger.info("Spark Context configurated. mapred.max.splitsize:" + conf.getInt("mapred.max.split.size"));
     }
 
     public void compute() throws AggregationStrategyException {
         int k = conf.getInt("k");
-        int n = conf.getInt("n");
-
         boolean isAssembled = !conf.getString("assembled", Defaults.ASSEMBLED).equals("no");
 
-        Map<Integer, Long> id_lengths = input.
+        Map<Integer, Long> id_lengths = ioManager.chunks_rdd.
                 mapToPair(chunk -> new Tuple2<>(chunk.id, (long) chunk.data.length)).
                 reduceByKey(new SumChunkLen(isAssembled? k-1 : 0)).collectAsMap();
 
@@ -121,7 +131,7 @@ public class Fade {
                     seq_distincts = aggregation.mapToPair(el -> new Tuple2<>(el._2._1, el._1)).distinct().countByKey();
 
                     for (Map.Entry<SequenceId, Long> seq_distinct : seq_distincts.entrySet())
-                        setConfsLong("distinct_s" + seq_distinct.getKey().id, seq_distinct.getValue());
+                        setConfsDouble("distinct_s" + seq_distinct.getKey().id, seq_distinct.getValue());
 
                     if (aggregation.take(1).get(0)._2._2 instanceof CountValue) {
                         seq_pseudocounts = aggregation.filter(t -> ((CountValue) t._2._2).count == 0).
@@ -141,9 +151,6 @@ public class Fade {
                     }
                     // end: computing additional info
 
-                    if (getConf().getBoolean("histogram", false))
-                        aggregation.filter(t -> ((CountValue) t._2._2).count > 0).mapToPair(t -> new Tuple2<>(t._2._1, new Tuple2(t._1, t._2._2))).partitionBy(new HashPartitioner(n)).saveAsTextFile(outputDir + "_hist");
-
                     distance_matrices = DistributedAFFunctionEvaluator.evaluateByStatistic(aggregation, evaluators);
                     aggregation.unpersist();
                 }
@@ -160,7 +167,7 @@ public class Fade {
                 seq_distincts = aggregation.mapToPair(el -> new Tuple2<>(el._2._1, el._1)).distinct().countByKey();
 
                 for (Map.Entry<SequenceId, Long> seq_distinct : seq_distincts.entrySet())
-                    setConfsLong("distinct_s" + seq_distinct.getKey().id, seq_distinct.getValue());
+                    setConfsDouble("distinct_s" + seq_distinct.getKey().id, seq_distinct.getValue());
 
                 if (aggregation.take(1).get(0)._2._2 instanceof CountValue) {
                     seq_pseudocounts = aggregation.filter(t -> ((CountValue) t._2._2).count == 0).
@@ -180,9 +187,6 @@ public class Fade {
                 }
                 // end: computing additional info
 
-                if (getConf().getBoolean("histogram", false))
-                    aggregation.filter(t -> ((CountValue) t._2._2).count > 0).mapToPair(t -> new Tuple2<>(t._2._1, new Tuple2(t._1, t._2._2))).partitionBy(new HashPartitioner(n)).saveAsTextFile(outputDir + "_hist");
-
                 distance_matrices = DistributedAFFunctionEvaluator.evaluateByStatistic(aggregation, evaluators);
                 aggregation.unpersist();
             } else if (strategy == Strategy.TOTAL_AGGREGATION) {
@@ -198,7 +202,7 @@ public class Fade {
                 seq_distincts = aggregation.mapToPair(el -> new Tuple2<>(el._2._1(), el._2._2())).distinct().countByKey();
 
                 for (Map.Entry<SequenceId, Long> seq_distinct : seq_distincts.entrySet())
-                    setConfsLong("distinct_s" + seq_distinct.getKey().id, seq_distinct.getValue());
+                    setConfsDouble("distinct_s" + seq_distinct.getKey().id, seq_distinct.getValue());
 
                 if (aggregation.take(1).get(0)._2._3() instanceof CountValue) {
                     seq_pseudocounts = aggregation.filter(t -> ((CountValue) t._2._3()).count == 0).
@@ -217,9 +221,6 @@ public class Fade {
                         setConfsDouble("stdev_s" + seq_stdev.getKey().id, seq_stdev.getValue());
                 }
                 // end: computing additional info
-
-                if (getConf().getBoolean("histogram", false))
-                    aggregation.filter(t -> ((CountValue) t._2._3()).count > 0).mapToPair(t -> new Tuple2<>(t._2._1(), new Tuple2(t._2._2(), t._2._3()))).partitionBy(new HashPartitioner(n)).saveAsTextFile(outputDir + "_hist");
 
                 distance_matrices = DistributedAFFunctionEvaluator.evaluateByUnique(aggregation, evaluators);
                 aggregation.unpersist();

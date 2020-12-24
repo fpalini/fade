@@ -11,6 +11,7 @@ import scala.Tuple3;
 import java.util.*;
 
 abstract class DistributedAFFunctionEvaluator {
+
 	static JavaPairRDD<SequencePair, AFValue[]> evaluateByStatistic(JavaPairRDD<Statistic, Tuple2<SequenceId, Value>> input, ArrayList<AFFunctionEvaluator> evaluators) {
 		return input
 				.groupByKey()
@@ -50,8 +51,13 @@ abstract class DistributedAFFunctionEvaluator {
 						while (iter2.hasNext()) {
 							Tuple2<SequenceId, Value> v2 = iter2.next();
 
-							if (v1._1.id < v2._1.id) {
-								AFValues = new AFValue[evaluators.size()];
+ 							// calcola la distanza solo per le sequenze adiacenti
+ 							if (v1._1.id % 2 == 0 && v1._1.id + 1 == v2._1.id) {
+ 							// if (v1._1.id < v2._1.id) {
+  
+							// System.out.printf("filtered: %d - %d\n", v1._1.id, v2._1.id);
+
+							    AFValues = new AFValue[evaluators.size()];
 
 								for (int i = 0; i < evaluators.size(); i++) {
 									AFFunctionEvaluator e = evaluators.get(i);
@@ -72,6 +78,7 @@ abstract class DistributedAFFunctionEvaluator {
 								}
 
 								partialDistances.add(new Tuple2<>(new SequencePair(v1._1, v2._1), AFValues));
+ 								break; // valutata la coppia si passa alla prossima seq1
 							}
 						}
 					}
@@ -219,12 +226,13 @@ abstract class DistributedAFFunctionEvaluator {
 
     static JavaPairRDD<SequencePair, AFValue[]> evaluateBySeqPair(JavaPairRDD<SequencePair, Value> input, ArrayList<AFFunctionEvaluator> evaluators) {
 		return input
+				.filter(x -> ((x._1.id1 % 2 == 0) && (x._1.id1 + 1 == x._1.id2)))
 				.groupByKey()
 				.mapToPair(item -> {
 					AFValue[] AFValues = new AFValue[evaluators.size()];
 
 					for (int i = 0; i < AFValues.length; i++)
-						AFValues[i] = ((AFFunctionEvaluatorBySeqPair)evaluators.get(i)).call(item).get(0)._2;
+						AFValues[i] = ((AFFunctionEvaluatorBySeqPair) evaluators.get(i)).call(item).get(0)._2;
 
 					return new Tuple2<>(item._1, AFValues);
 				})
