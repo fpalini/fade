@@ -2,9 +2,7 @@
 
 *FADE (Fast Alignment-free Distributed Environment)* is an extensible framework, developed to efficiently compute alignment-free (AF) functions on a set of large genomic sequences. It runs over *Apache Spark* (>=2.3, https://spark.apache.org/) and requires a *Java* compliant virtual machine (>= 1.8, https://adoptopenjdk.net). Moreover, it can perform Monte Carlo hypothesis test simulations, in order to analyze the AF matrix computed on the set of sequences.
 
-A copy of FADE, including source code, can be downloaded from: [FADE](http://www.statistica.uniroma1.it/users/uferraro/experim/FADE/fade-1.0.0.zip)
-
-**NOTE**: an extended version of this documentation is included in the downloadable FADE package.
+**NOTE**: an extended version of this documentation is included in *MANUAL.pdf*.
 
 ### The processing pipeline
 
@@ -12,7 +10,7 @@ A copy of FADE, including source code, can be downloaded from: [FADE](http://www
 
 
 ## Usage
-The software package includes a single executable jar file, **fade-1.0.0-all.jar**, that can be used to run FADE from the command line, together with the *Apache Spark*  `spark-submit` command, using the following syntax:
+The software is released as a single executable jar file, **fade-1.0.0-all.jar**, that can be used to run FADE from the command line, together with the *Apache Spark*  `spark-submit` command, using the following syntax:
 
 `spark-submit fade-1.0.0-all.jar [conf-file]`
 
