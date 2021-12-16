@@ -1,6 +1,7 @@
 plugins {
     id 'scala'
     id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'maven-publish'
 }
 
 group 'it.uniroma1.dss'
@@ -33,4 +34,22 @@ dependencies {
     implementation 'com.github.umbfer:fastdoop:1e74186'
     implementation 'com.github.umbfer:fastdoop:1e74186'
     implementation 'it.unimi.dsi:fastutil:8.4.0'
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/fpalini/fade")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+            }
+        }
+    }
+    publications {
+        gpr(MavenPublication) {
+            from(components.java)
+        }
+    }
 }
