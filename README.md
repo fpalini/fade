@@ -173,3 +173,8 @@ FADE has been extensively tested by using the following genomic datasets:
 - [Unassembled Plants (coverage 1) (2.7GB)](http://afproject.org/media/genome/std/unassembled/plants/dataset/unassembled-plants.zip)
 - [Yersinia (11MB)](http://afproject.org/media/genome/hgt/unsimulated/yersinia/dataset/unsimulated-yersinia.zip)
 
+
+## Acknowledgments 
+This software was developed to support the experimental part of research partially supported by  the PRIN project  
+Multicriteria Data Structures and Algorithms: from compressed to learned indexes, and beyond
+PRIN no. 2017WR7SHH
